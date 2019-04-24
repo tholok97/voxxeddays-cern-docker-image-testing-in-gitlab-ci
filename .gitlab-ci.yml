@@ -2,10 +2,14 @@ stages:
   - build_and_publish
 
 job_build_and_publish:
+  variables:
+    PUBLISHED_PDF_NAME: tloekkeb_voxxeddays_cern_2019_05_01_docker_image_testing_in_gitlab_ci.pdf
   stage: build_and_publish
   image: blang/latex:ubuntu
   script:
     - latexmk -shell-escape -interaction=nonstopmode -halt-on-error -output-directory=build -f -pdf main.tex
+    # move built pdf to root of build so artifact isn't bundled inside build folder
+    - mv build/main.pdf "${PUBLISHED_PDF_NAME}"
   artifacts:
     paths:
-    - build/main.pdf
+    - "${PUBLISHED_PDF_NAME}"
