@@ -1,0 +1,11 @@
+stages:
+  - build_and_publish
+
+job_build_and_publish:
+  stage: build_and_publish
+  image: blang/latex:ubuntu
+  script:
+    - latexmk -shell-escape -interaction=nonstopmode -halt-on-error -output-directory=build -f -pdf main.tex
+  artifacts:
+    paths:
+    - build/main.pdf
