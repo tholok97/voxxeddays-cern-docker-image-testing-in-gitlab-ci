@@ -1,4 +1,4 @@
-# Source for my presentation "Docker image testing in GitLab CI" for [VoxxedDays CERN](https://voxxeddays.com/cern/) 1st May 2019
+# Source of my presentation "Docker image testing in GitLab CI" for [VoxxedDays CERN](https://voxxeddays.com/cern/) 1st May 2019
 
 ## Prerequisites
 

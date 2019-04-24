@@ -13,3 +13,5 @@ job_build_and_publish:
   artifacts:
     paths:
     - "${PUBLISHED_PDF_NAME}"
+    # set to expire not long after my contract expires
+    expire_in: 1 yrs
