@@ -2,7 +2,7 @@
 
 [Link to presentation at 24 April 2019.](https://gitlab.cern.ch/tloekkeb/voxxeddays-cern-docker-image-testing-in-gitlab-ci/-/jobs/4012775/artifacts/file/tloekkeb_voxxeddays_cern_2019_05_01_docker_image_testing_in_gitlab_ci.pdf)
 
-The presentation is being build on each push by GitLab CI and published as an artifact. The artifact is accessible by browsing the pipeline for a particular pushed commit.
+The presentation is built on each push by GitLab CI and published as an artifact. The artifact is accessible by browsing the pipeline for a particular pushed commit.
 
 ## Prerequisites
 
