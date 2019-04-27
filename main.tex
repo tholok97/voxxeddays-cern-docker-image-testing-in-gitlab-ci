@@ -192,14 +192,6 @@ http:
   \end{figure}
 \end{frame}
 
-\begin{frame}
-  \frametitle{Google's "ContainerStructureTest"}
-  \begin{itemize}
-    \item Recent Google tool similar to Goss
-    \item Basic tests runnable \textbf{without} Docker daemon (!)
-    \item Not as featurerich, but will likely receive more support
-  \end{itemize}
-\end{frame}
 
 \subsection{SSO}
 
@@ -305,7 +297,6 @@ do_curl_test_with_basic_auth \
   \end{minted}
 \end{frame}
 
-\section{Future Improvements}
 
 \subsection{Building multiple images}
 
@@ -340,60 +331,93 @@ job_build_9_0_jdk8:
 
 % fragile cause contains verbatim
 \begin{frame}[fragile]
-  \frametitle{teh kode}
+  \frametitle{The templates - YAML anchors/references 101}
   \begin{minted}[
-      frame=topline,
-      fontsize=\ssmall,
+      fontsize=\small,
       breaklines,
     ]{yaml}
-job_test_8_5_jdk7_goss:
-  variables:
-    <<: *template_reference_common_variables_docker_dind
-    <<: *template_reference_tomcat_8_5_jdk7_variables
-  <<: *template_reference_test_goss
-  dependencies:
-    - job_build_8_5_jdk7
+.hidden: &anchor
+  image: docker:18-09
 
-job_test_8_5_jdk7_sso:
-  variables:
-    <<: *template_reference_common_variables_docker_dind
-    <<: *template_reference_tomcat_8_5_jdk7_variables
-  <<: *template_reference_test_sso
-  dependencies:
-    - job_build_8_5_jdk7
+my_job:
+  # reference to anchor
+  <<: *anchor
+  script:
+    - docker info
+  \end{minted}
+\end{frame}
 
-job_test_8_5_jdk7_ldap:
-  variables:
-    <<: *template_reference_common_variables_docker_dind
-    <<: *template_reference_tomcat_8_5_jdk7_variables
-  <<: *template_reference_test_ldap
-  dependencies:
-    - job_build_8_5_jdk7
+% fragile cause contains verbatim
+\begin{frame}[fragile]
+  \frametitle{The templates - Common all DinD jobs}
+  \begin{minted}[
+      fontsize=\scriptsize,
+      breaklines,
+    ]{yaml}
+.template_common_all_docker_dind_jobs: &template_reference_common_all_docker_dind_jobs
+  image: docker:18.09
+  tags:
+    - db-runner-docker-privilege
+  before_script:
+    - docker info
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - if [ -z $RUNNING_LOCALLY ]; then ln -s "$PWD" /artifacts && echo "CREATED SYMLINK"; fi
+  services:
+    - name: docker:18.09-dind
+      alias: localhost
 
-job_test_9_0_jdk8_goss:
-  variables:
-    <<: *template_reference_common_variables_docker_dind
-    <<: *template_reference_tomcat_9_0_jdk8_variables
-  <<: *template_reference_test_goss
-  dependencies:
-    - job_build_9_0_jdk8
+.template_common_variables_docker_dind: &template_reference_common_variables_docker_dind
+  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_DRIVER: overlay2
+  \end{minted}
+\end{frame}
 
-job_test_9_0_jdk8_sso:
-  variables:
-    <<: *template_reference_common_variables_docker_dind
-    <<: *template_reference_tomcat_9_0_jdk8_variables
-  <<: *template_reference_test_sso
-  dependencies:
-    - job_build_9_0_jdk8
+% fragile cause contains verbatim
+\begin{frame}[fragile]
+  \frametitle{The templates - Build}
+  \begin{minted}[
+      fontsize=\scriptsize,
+      breaklines,
+    ]{yaml}
+.template_build: &template_reference_build
+  stage: build
+  <<: *template_reference_common_all_docker_dind_jobs
+  script:
+    - docker pull ${PUSH_IMAGE_LATEST} || true
+    -> docker build
+      --cache-from ${PUSH_IMAGE_LATEST}
+      --build-arg TOMCAT_MAJOR_VERSION="${TOMCAT_MAJOR_VERSION}"
+      --build-arg JAVA_MAJOR_VERSION="${JAVA_MAJOR_VERSION}"
+      -t ${TEST_IMAGE_TAG} .
+    - docker save --output /artifacts/${TEST_IMAGE_TAR} ${TEST_IMAGE_TAG}
+  artifacts:
+    expire_in: '1 day'
+    paths:
+      - ${TEST_IMAGE_TAR}
+  \end{minted}
+\end{frame}
 
-job_test_9_0_jdk8_ldap:
-  variables:
-    <<: *template_reference_common_variables_docker_dind
-    <<: *template_reference_tomcat_9_0_jdk8_variables
-  <<: *template_reference_test_ldap
-  dependencies:
-    - job_build_9_0_jdk8
+% fragile cause contains verbatim
+\begin{frame}[fragile]
+  \frametitle{The templates - Variables}
+  \begin{minted}[
+      fontsize=\scriptsize,
+      breaklines,
+    ]{yaml}
+.template_image_tag_variables: &template_reference_image_tag_variables
+  TEST_IMAGE_TAG: test:${CI_COMMIT_REF}-${TOMCAT_MAJOR_VERSION}-${JAVA_MAJOR_VERSION}
+  TEST_IMAGE_TAR: test:${CI_COMMIT_REF}-${TOMCAT_MAJOR_VERSION}-${JAVA_MAJOR_VERSION}.tar
+  PUSH_IMAGE_LATEST: ${CI_REGISTRY_IMAGE}/${TOMCAT_FULL_VERSION}/${JAVA_FULL_VERSION}:latest
 
+.template_tomcat_8_5_jdk7_variables: &template_reference_tomcat_8_5_jdk7_variables
+  TOMCAT_MAJOR_VERSION: "8"
+  JAVA_MAJOR_VERSION: "7"
+  <<: *template_reference_image_tag_variables
+
+.template_tomcat_9_0_jdk8_variables: &template_reference_tomcat_9_0_jdk8_variables
+  TOMCAT_MAJOR_VERSION: "9"
+  JAVA_MAJOR_VERSION: "8"
+  <<: *template_reference_image_tag_variables
   \end{minted}
 \end{frame}
 
@@ -403,9 +427,36 @@ job_test_9_0_jdk8_ldap:
   \end{figure}
 \end{frame}
 
+\section{Future Improvements}
+
+\subsection{Explore non-DinD options}
+
+\begin{frame}
+  \frametitle{Explore non-DinD options}
+TODO/TOremove
+\end{frame}
+
+\subsection{ContainerStructureTest}
+
+\begin{frame}
+  \frametitle{Google's "ContainerStructureTest"}
+  \begin{itemize}
+    \item Recent Google tool similar to Goss
+    \item Basic tests runnable \textbf{without} Docker daemon (!)
+    \item Not as featurerich, but will likely receive more support
+  \end{itemize}
+\end{frame}
+
+\subsection{Clair}
+
+\begin{frame}
+  \frametitle{Clair}
+TODO/TOremove
+\end{frame}
+
+
 \section{}
 
 \cernSplashWhite
 
 \end{document}
-
