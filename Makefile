@@ -10,4 +10,5 @@ clean:
 	find build/* ! -name '.gitkeep' -type d -exec rm -rf {} + || true
 
 lint:
-	docker run -i -v "$(PWD)":/work goodcheck goodcheck check
+	docker run --rm -i -v "$(PWD)":/work goodcheck goodcheck check
+	docker run --rm -i -v "$(PWD)":/root gitlab-registry.cern.ch/db/jeedy/utils/yamllint-docker:1.15.0 yamllint -c /root/yamllint.yml /root/.gitlab-ci.yml /root/goodcheck.yml /root/yamllint.yml

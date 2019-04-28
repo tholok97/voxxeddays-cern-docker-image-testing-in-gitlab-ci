@@ -1,5 +1,18 @@
+---
 stages:
+  - lint
   - build_and_publish
+
+job_lint_yaml:
+  tags:
+    - docker
+  stage: lint
+  image: gitlab-registry.cern.ch/db/jeedy/utils/yamllint-docker:1.15.0
+  script:
+    - yamllint --version
+    - yamllint -c yamllint.yml .gitlab-ci.yml goodcheck.yml yamllint.yml
+
+# TODO run goodcheck in pipeline
 
 job_build_and_publish:
   variables:
@@ -12,6 +25,6 @@ job_build_and_publish:
     - mv build/main.pdf "${PUBLISHED_PDF_NAME}"
   artifacts:
     paths:
-    - "${PUBLISHED_PDF_NAME}"
+      - "${PUBLISHED_PDF_NAME}"
     # set to expire not long after my contract expires
     expire_in: 1 yrs
