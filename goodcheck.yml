@@ -1,0 +1,24 @@
+# Config file for https://github.com/sider/goodcheck
+---
+rules:
+  - id: com.tloekkeb.latex.section.uppercased
+    pattern:
+      regexp: '^ *\\(((sub)*section)|(\w*[Tt]itle)){[\w ]*\b(?!((of)|(is)))[a-z]\w*\b[\w ]*}'
+      case_sensitive: true
+      multiline: false
+    message: Words in (sub)*sections and titles should start with an uppercase letter, except for words like of, is, ...
+    glob:
+      - 'main.tex'
+    pass:
+      - '\section{Koko}'
+      - '\section{Koko is Kaka of Kiki}'
+      - '  \section{Koko}'
+      - '\subsection{Koko Kaka}'
+      - '\subsubsection{Koko Kiki Keke}'
+      - '\frameTitle{Koko Kyky}'
+      - '%  \section{koko}'
+    fail:
+      - '\section{koko}'
+      - '\subsection{Koko kaka}'
+      - '\subsubsection{Koko Kiki keke}'
+      - '\frameTitle{Koko kyky}'

@@ -15,18 +15,18 @@
 
 \usetheme{cern}
 
-% \newcommand{\interludeTitle}{We are here!}
-% \AtBeginSection[] {
-%   \frame{
-%     \frametitle{\interludeTitle}
-%     \begin{multicols}{2}
-%       \tableofcontents[
-%         currentsection,
-%         sectionstyle=show/shaded,
-%       ]
-%     \end{multicols}
-%   }
-% }
+\newcommand{\interludeTitle}{Outline - We Are Here}
+\AtBeginSection[] {
+  \frame{
+    \frametitle{\interludeTitle}
+    \begin{multicols}{2}
+      \tableofcontents[
+        currentsection,
+        sectionstyle=show/shaded,
+      ]
+    \end{multicols}
+  }
+}
 
 % \AtBeginSubsection[] {
 %   \frame{
@@ -76,10 +76,10 @@
 
 \section{Introduction}
 
-\subsection{Features used}
+\subsection{Features Used}
 
 \begin{frame}
-  \frametitle{Features used}
+  \frametitle{Features Used}
     \begin{itemize}
       \item GitLab CI
       \begin{itemize}
@@ -89,8 +89,8 @@
         \end{itemize}
         \item Docker-in-Docker
         \begin{itemize}
-          \item docker:dind -> \mintinline{yaml}{alias: localhost}
-          \item \mintinline{bash}{--cache-from}
+          \item docker:dind as a service -> \mintinline{yaml}{alias: localhost}
+          \item \mintinline{bash}{docker build --cache-from}
         \end{itemize}
         \item Artifacts
         \begin{itemize}
@@ -105,14 +105,7 @@
   \end{figure}
 \end{frame}
 
-\subsection{The pipeline}
-
-\begin{frame}
-  \frametitle{The Pipeline*}
-  \begin{figure}
-    \includegraphics[width=\textwidth]{images/pipeline_2.png}
-  \end{figure}
-\end{frame}
+\subsection{The Pipeline}
 
 \begin{frame}
   \frametitle{The Pipeline}
@@ -122,23 +115,26 @@
 \end{frame}
 
 \begin{frame}
+  \frametitle{The Pipeline*}
+  \begin{figure}
+    \includegraphics[width=\textwidth]{images/pipeline_2.png}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \begin{figure}
+    \includegraphics[height=0.9\textheight]{images/pipeline_multi.png}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
   \frametitle{The Pipeline - Quick facts}
   \begin{itemize}
-    \item Aprox. duration of full pipeline: 13 minutes
+    \item Approx. duration of full pipeline: 13 minutes
     \item Jobs per pipeline: 26
     \item Total pipelines: 351
     \item Success rate: 79\%
     \item Biggest timestealer: Passing artifacts + \mintinline{bash}{docker save/load}
-  \end{itemize}
-\end{frame}
-
-\subsection{General approach}
-
-\begin{frame}
-  \frametitle{General approach to writing tests}
-  \textit{TODO / TOberemoved}
-  \begin{itemize}
-    \item Should run both in pipeline and locally
   \end{itemize}
 \end{frame}
 
@@ -297,12 +293,11 @@ do_curl_test_with_basic_auth \
   \end{minted}
 \end{frame}
 
-
-\subsection{Building multiple images}
+\section{Building Multiple Versions Of Image}
 
 % fragile cause contains verbatim
 \begin{frame}[fragile]
-  \frametitle{Building multiple versions of image}
+  \frametitle{Building Multiple Versions of Image}
   \begin{itemize}
     \item GitLab CI missing "build matrix" feature
     \begin{itemize}
@@ -337,7 +332,7 @@ job_build_9_0_jdk8:
       breaklines,
     ]{yaml}
 .hidden: &anchor
-  image: docker:18-09
+  image: docker:18.09
 
 my_job:
   # reference to anchor
@@ -421,39 +416,95 @@ my_job:
   \end{minted}
 \end{frame}
 
-\begin{frame}
-  \begin{figure}
-    \includegraphics[height=0.9\textheight]{images/pipeline_multi.png}
-  \end{figure}
+% fragile cause contains verbatim
+\begin{frame}[plain,fragile]
+  \frametitle{The templates - Usage}
+
+  \begin{multicols}{2}
+    \begin{minted}[
+        fontsize=\tiny,
+        breaklines,
+      ]{yaml}
+job_build_8_5_jdk7:
+  variables:
+    <<: *template_reference_common_variables_docker_dind
+    <<: *template_reference_tomcat_8_5_jdk7_variables
+  <<: *template_reference_build
+
+job_build_9_0_jdk8:
+  variables:
+    <<: *template_reference_common_variables_docker_dind
+    <<: *template_reference_tomcat_9_0_jdk8_variables
+  <<: *template_reference_build
+    \end{minted}
+    \hrule
+    \begin{minted}[
+        fontsize=\tiny,
+        breaklines,
+      ]{yaml}
+job_test_8_5_jdk7_goss:
+  variables:
+    <<: *template_reference_common_variables_docker_dind
+    <<: *template_reference_tomcat_8_5_jdk7_variables
+  <<: *template_reference_test_goss
+  dependencies:
+    - job_build_8_5_jdk7
+    \end{minted}
+    \vfill\null
+    \columnbreak
+    \begin{minted}[
+        fontsize=\tiny,
+        breaklines,
+      ]{yaml}
+job_test_9_0_jdk8_goss:
+  variables:
+    <<: *template_reference_common_variables_docker_dind
+    <<: *template_reference_tomcat_9_0_jdk8_variables
+  <<: *template_reference_test_goss
+  dependencies:
+    - job_build_9_0_jdk8
+    \end{minted}
+    \hrule
+    \begin{minted}[
+        fontsize=\tiny,
+        breaklines,
+      ]{yaml}
+job_push_8_5_jdk7:
+  variables:
+    <<: *template_reference_common_variables_docker_dind
+    <<: *template_reference_tomcat_8_5_jdk7_variables
+  <<: *template_reference_push
+  dependencies:
+    - job_build_8_5_jdk7
+
+job_push_9_0_jdk8:
+  variables:
+    <<: *template_reference_common_variables_docker_dind
+    <<: *template_reference_tomcat_9_0_jdk8_variables
+  <<: *template_reference_push
+  dependencies:
+    - job_build_9_0_jdk8
+    \end{minted}
+  \end{multicols}
 \end{frame}
+
+\subsection{}
 
 \section{Future Improvements}
 
-\subsection{Explore non-DinD options}
-
 \begin{frame}
-  \frametitle{Explore non-DinD options}
-TODO/TOremove
-\end{frame}
-
-\subsection{ContainerStructureTest}
-
-\begin{frame}
-  \frametitle{Google's "ContainerStructureTest"}
+  \frametitle{Future Improvements}
   \begin{itemize}
-    \item Recent Google tool similar to Goss
-    \item Basic tests runnable \textbf{without} Docker daemon (!)
-    \item Not as featurerich, but will likely receive more support
+    \item Unprivileged runner alternatives
+    \item "ContainerStructureTest" tool
+    \begin{itemize}
+      \item Recent Google tool similar to Goss
+      \item Basic tests runnable \textbf{without} Docker daemon (!)
+      \item Not as featurerich, but will likely receive more support
+    \end{itemize}
+    \item "Clair"
   \end{itemize}
 \end{frame}
-
-\subsection{Clair}
-
-\begin{frame}
-  \frametitle{Clair}
-TODO/TOremove
-\end{frame}
-
 
 \section{}
 

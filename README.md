@@ -13,6 +13,17 @@ The presentation is built on each push by GitLab CI and published as an artifact
 
 `make build` should produce a pdf at `build/main.pdf`. Note that the Docker image used is very big, so pulling might take a while.
 
+## How to validate
+
+This repo uses https://github.com/sider/goodcheck to lint repo using regex rules defined in goodcheck.yml. You'll have to build the Docker image yourself:
+
+```
+# ...move to directory to clone into
+git clone https://github.com/sider/goodcheck.git
+cd goodcheck
+docker build -t goodcheck .
+```
+
 ## References
 
 * Based on this template: <https://github.com/icot/cern-beamer/tree/e50916c89196f22452037fd9526d6b7a7a2ab440>
