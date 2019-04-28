@@ -3,9 +3,9 @@
 rules:
   - id: com.tloekkeb.latex.section.uppercased
     pattern:
-      regexp: '^ *\\(((sub)*section)|(\w*[Tt]itle))((\[.*\])?){[\w ]*\b(?!((of)|(is)|(in)))[a-z]\w*\b[\w ]*}'
+      regexp: '^ *\\(((sub)*section)|(\w*[Tt]itle\w*))(\[[^\]]*\])?{[\w ]*\b(?!((is)|(in)|(of)))[a-z]\w*\b[\w ]*}'
       case_sensitive: true
-      multiline: false
+      multiline: true
     message: Words in (sub)*sections and titles should start with an uppercase letter, except for words like of, is, ...
     glob:
       - 'main.tex'
@@ -18,12 +18,22 @@ rules:
       - '\frameTitle{Koko Kyky}'
       - '%  \section{koko}'
       - '\title[]{Docker Image Testing in GitLab CI}'
+      - '
+        \whatevertitle[
+          koko=keke,
+        ]{Docker Image}
+        '
     fail:
       - '\section{koko}'
       - '\subsection{Koko kaka}'
       - '\subsubsection{Koko Kiki keke}'
       - '\frameTitle{Koko kyky}'
       - '\title[]{Docker image testing in GitLab CI}'
+      - '
+        \whatevertitle[
+          koko=keke,
+        ]{Docker image}
+        '
   - id: com.tloekkeb.gitlab
     pattern:
       regexp: '((Gitlab)|(gitlab))(?![-\.])'
