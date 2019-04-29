@@ -19,12 +19,10 @@
 \AtBeginSection[] {
   \frame{
     \frametitle{\interludeTitle}
-    \begin{multicols}{2}
-      \tableofcontents[
-        currentsection,
-        sectionstyle=show/shaded,
-      ]
-    \end{multicols}
+    \tableofcontents[
+      currentsection,
+      sectionstyle=show/shaded,
+    ]
   }
 }
 
@@ -55,6 +53,8 @@
 % Body
 \begin{document}
 
+\setbeamertemplate{caption}{\raggedright\tiny\insertcaption\par}
+
 \cernSplashBlue
 
 % Title
@@ -68,9 +68,7 @@
 % TOC
 \frame{
   \frametitle{Outline}
-  \begin{multicols}{2}
-    \tableofcontents
-  \end{multicols}
+  \tableofcontents
 }
 
 
@@ -82,27 +80,49 @@
   \frametitle{Features Used}
     \begin{itemize}
       \item GitLab CI
-      \begin{itemize}
-        \item Private GitLab Runners
-        \begin{itemize}
-          \item \mintinline{bash}{--privileged}
-        \end{itemize}
-        \item Docker-in-Docker
-        \begin{itemize}
-          \item docker:dind as a service -> \mintinline{yaml}{alias: localhost}
-          \item \mintinline{bash}{docker build --cache-from}
-        \end{itemize}
-        \item Artifacts
-        \begin{itemize}
-          \item \mintinline{bash}{docker save / load} = tarball
-        \end{itemize}
-        \item GitLab Runner Exec
-      \end{itemize}
       \item GitLab Container Registry
+      \item Private GitLab Runners
+      \item GitLab Runner Exec
+      \item \textbf{Docker-in-Docker}
+      \item \textbf{Artifacts}
     \end{itemize}
   \begin{figure}
     \includegraphics[width=0.3\textwidth]{images/gitlab.png}
   \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Features Used - Docker-in-Docker}
+  \begin{figure}
+    \includegraphics[width=0.4\textwidth]{images/dockerindocker.jpeg}
+  \end{figure}
+  \begin{itemize}
+    \item Docker daemon running inside Docker daemon
+    \item Access to \mintinline{bash}{docker} command in GitLab CI jobs
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[plain]
+  \begin{figure}
+    \includegraphics[height=\textheight]{images/dindexplanation.png}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Features Used - Docker-in-Docker - Tricks}
+  Tricks:
+  \begin{itemize}
+    \item docker:dind as a service - \mintinline{yaml}{alias: localhost}
+    \item \mintinline{bash}{docker build --cache-from}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Features Used - Artifacts}
+  \begin{itemize}
+    \item Images passed between jobs as artifacts
+    \item \mintinline{bash}{docker save / load} - tarball
+  \end{itemize}
 \end{frame}
 
 \subsection{The Pipeline}
@@ -143,16 +163,28 @@
 \subsection{Goss}
 
 % fragile cause verbatim used
-\begin{frame}[fragile]
+\begin{frame}
   \frametitle{Goss - Dgoss}
   \begin{itemize}
     \item Asserts Docker image meets requirements described in goss.yaml file
-    \item Can generate goss.yaml from running container
+    %\item Can generate goss.yaml from running container
+    \item Tests:
+    \begin{itemize}
+    \item \mintinline{text}{user}
+    \item \mintinline{text}{file}
+    \item \mintinline{text}{command}
+    \item \mintinline{text}{port}
+    \item \mintinline{text}{http}
+    \item \mintinline{text}{...}
+    \end{itemize}
   \end{itemize}
+\end{frame}
 
+% fragile cause verbatim used
+\begin{frame}[fragile]
+  \frametitle{Goss - goss.yaml}
   \begin{minted}[
-      frame=topline,
-      fontsize=\tiny,
+      fontsize=\scriptsize,
       breaklines,
     ]{yaml}
 user:
@@ -175,14 +207,21 @@ http:
 
 % fragile cause verbatim used
 \begin{frame}[fragile]
-  \frametitle{Goss - Example}
+  \frametitle{Goss - Running}
   \begin{minted}[
-      frame=bottomline,
-      fontsize=\scriptsize,
+      fontsize=\large,
       breaklines,
     ]{bash}
-    GOSS_FILES_PATH=tests GOSS_FILES_STRATEGY=cp GOSS_SLEEP=5 dgoss run -e SOME_VAR=some-value -v /mount/path/outer:/mount/path/inner image-under-test
+    dgoss run \
+     -e SOME_VAR=some-value \
+     -v /mount/path/outer:/mount/path/inner \
+     image-under-test:1.0
   \end{minted}
+\end{frame}
+
+% fragile cause verbatim used
+\begin{frame}[fragile]
+  \frametitle{Goss - Output}
   \begin{figure}
     \includegraphics[width=\textwidth]{images/goss.png}
   \end{figure}
@@ -194,15 +233,10 @@ http:
 \begin{frame}
   \frametitle{SSO Test - Concept} 
   \begin{itemize}
-    \item «Given valid webapp and idP, can a test user log in successfully?»
-    \item Keycloak as containerized idP with test data from JSON
+    \item «Given valid webapp and Identity Provider, can a test user log in successfully?»
+    \item Keycloak as containerized Identity Provider with test data from JSON
     \item Webapp that shows received information about logged-in user
-    \item Steps:
-    \begin{itemize}
-      \item Setup - Start containers
-      \item Execute - Perform test
-      \item Teardown - Remove containers and dump logs
-    \end{itemize}
+    \item Steps: Setup, Execute, Teardown
   \end{itemize}
   \begin{figure}
     \includegraphics[width=0.3\textwidth]{images/keycloak_logo.png}
@@ -241,12 +275,16 @@ docker run \
 
 \begin{frame}
   \frametitle{SSO Test - Execute}
-  \begin{itemize}
-    \item Curl application and expect redirect to Keycloak log-in
-    \item Curl log-in form to Keycloak and receive SAMLResponse
-    \item Manually POST SAMLResponse to application (would be done by JavaScript)
-    \item Assert that application recieved information we expected
-  \end{itemize}
+  Flow:
+  \begin{enumerate}
+    \item User tries to access web application
+    \item User is redirected to SSO login
+    \item User logs in
+    \item User is redirected back to web application
+    \item Assert that web application shows information we expect
+  \end{enumerate}
+  \hfill\break % create one empty line
+  Above can be performed with three \mintinline{text}{curl}'s and some \mintinline{text}{sed}-fu
 \end{frame}
 
 \begin{frame}
@@ -297,36 +335,19 @@ do_curl_test_with_basic_auth \
 
 % fragile cause contains verbatim
 \begin{frame}[fragile]
-  \frametitle{Building Multiple Versions of Image}
+  \frametitle{Scaling Pipeline to Multiple Versions of Image}
   \begin{itemize}
-    \item GitLab CI missing "build matrix" feature
+    \item GitLab CI missing "build matrix" feature. Solutions:
     \begin{itemize}
-      \item Anchors/References
-      \item Extends/Include
+      \item Extends/Include - Newer, not supported by GitLab Runner Exec
+      \item Anchors/References - What we use
     \end{itemize}
   \end{itemize}
-  \begin{minted}[
-      frame=topline,
-      fontsize=\scriptsize,
-      breaklines,
-    ]{yaml}
-job_build_8_5_jdk7:
-  variables:
-    <<: *template_reference_common_variables_docker_dind
-    <<: *template_reference_tomcat_8_5_jdk7_variables
-  <<: *template_reference_build
-
-job_build_9_0_jdk8:
-  variables:
-    <<: *template_reference_common_variables_docker_dind
-    <<: *template_reference_tomcat_9_0_jdk8_variables
-  <<: *template_reference_build
-  \end{minted}
 \end{frame}
 
 % fragile cause contains verbatim
 \begin{frame}[fragile]
-  \frametitle{The templates - YAML anchors/references 101}
+  \frametitle{YAML Anchors/References - Concept}
   \begin{minted}[
       fontsize=\small,
       breaklines,
@@ -343,8 +364,64 @@ my_job:
 \end{frame}
 
 % fragile cause contains verbatim
+\begin{frame}[plain,fragile]
+  \frametitle{YAML Anchors/References - Usage}
+
+  \begin{minted}[
+      fontsize=\small,
+      breaklines,
+    ]{yaml}
+job_build_8_5_jdk7:
+  variables:
+    <<: *template_reference_common_variables_docker_dind
+    <<: *template_reference_tomcat_8_5_jdk7_variables
+  <<: *template_reference_build
+
+job_build_9_0_jdk8:
+  variables:
+    <<: *template_reference_common_variables_docker_dind
+    <<: *template_reference_tomcat_9_0_jdk8_variables
+  <<: *template_reference_build
+  \end{minted}
+\end{frame}
+
+\subsection{}
+
+\section{Future Improvements}
+
+\begin{frame}
+  \frametitle{Future Improvements}
+  \begin{itemize}
+    \item Unprivileged runner alternatives
+    \item "ContainerStructureTest" tool
+    \begin{itemize}
+      \item Recent Google tool similar to Goss
+      \item Basic tests runnable \textbf{without} Docker daemon (!)
+      \item Not as featurerich, but will likely receive more support
+    \end{itemize}
+    \item "Clair"
+  \end{itemize}
+\end{frame}
+
+\section{}
+
+\cernSplashWhite
+
+\section{References and Bonus Slides}
+
+\begin{frame}
+  \frametitle{References}
+  \begin{itemize}
+  \item Reference 1
+  \item Reference 2
+  \item Reference 3
+  \item Reference 4
+  \end{itemize}
+\end{frame}
+
+% fragile cause contains verbatim
 \begin{frame}[fragile]
-  \frametitle{The templates - Common all DinD jobs}
+  \frametitle{YAML Template Example - Common all DinD jobs}
   \begin{minted}[
       fontsize=\scriptsize,
       breaklines,
@@ -369,7 +446,7 @@ my_job:
 
 % fragile cause contains verbatim
 \begin{frame}[fragile]
-  \frametitle{The templates - Build}
+  \frametitle{YAML Template Example - Build}
   \begin{minted}[
       fontsize=\scriptsize,
       breaklines,
@@ -394,7 +471,7 @@ my_job:
 
 % fragile cause contains verbatim
 \begin{frame}[fragile]
-  \frametitle{The templates - Variables}
+  \frametitle{YAML Template Example - Variables}
   \begin{minted}[
       fontsize=\scriptsize,
       breaklines,
@@ -418,7 +495,7 @@ my_job:
 
 % fragile cause contains verbatim
 \begin{frame}[plain,fragile]
-  \frametitle{The templates - Usage}
+  \frametitle{YAML Template Example - Usage}
 
   \begin{multicols}{2}
     \begin{minted}[
@@ -487,27 +564,5 @@ job_push_9_0_jdk8:
     \end{minted}
   \end{multicols}
 \end{frame}
-
-\subsection{}
-
-\section{Future Improvements}
-
-\begin{frame}
-  \frametitle{Future Improvements}
-  \begin{itemize}
-    \item Unprivileged runner alternatives
-    \item "ContainerStructureTest" tool
-    \begin{itemize}
-      \item Recent Google tool similar to Goss
-      \item Basic tests runnable \textbf{without} Docker daemon (!)
-      \item Not as featurerich, but will likely receive more support
-    \end{itemize}
-    \item "Clair"
-  \end{itemize}
-\end{frame}
-
-\section{}
-
-\cernSplashWhite
 
 \end{document}
