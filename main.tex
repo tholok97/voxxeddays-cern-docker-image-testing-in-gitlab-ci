@@ -48,7 +48,7 @@
 \title[]{Docker Image Testing in GitLab CI}
 %% \subtitle{(no subtitle..)}
 %\author[Author]{\texorpdfstring{\url{thomas.loekkeborg@cern.ch}}{Author}}
-\author[Author]{Thomas Løkkeborg - IT-DB-DAR}
+\author[Author]{Thomas Løkkeborg - IT-DB-DAR\\\small github.com/tholok97}
 
 % Body
 \begin{document}
@@ -71,6 +71,19 @@
   \tableofcontents
 }
 
+%\begin{frame}
+%  \frametitle{Who am I?}
+%  \begin{multicols}{2}
+%    \begin{figure}
+%      \includegraphics[height=0.75\textheight]{images/norway.png}
+%      \caption{koko}
+%    \end{figure}
+%    \begin{figure}
+%      \includegraphics[width=0.5\textwidth]{images/sunnmore.jpg}
+%      \caption{kaka}
+%    \end{figure}
+%  \end{multicols}
+%\end{frame}
 
 \section{Introduction}
 
@@ -109,15 +122,6 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Features Used - Docker-in-Docker - Tricks}
-  Tricks:
-  \begin{itemize}
-    \item docker:dind as a service - \mintinline{yaml}{alias: localhost}
-    \item \mintinline{bash}{docker build --cache-from}
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
   \frametitle{Features Used - Artifacts}
   \begin{itemize}
     \item Images passed between jobs as artifacts
@@ -152,8 +156,8 @@
   \begin{itemize}
     \item Approx. duration of full pipeline: 13 minutes
     \item Jobs per pipeline: 26
-    \item Total pipelines: 351
-    \item Success rate: 79\%
+    \item Total started pipelines: 362
+    \item Success rate: 80\%
     \item Biggest timestealer: Passing artifacts + \mintinline{bash}{docker save/load}
   \end{itemize}
 \end{frame}
@@ -297,16 +301,21 @@ docker run \
 
 \subsection{LDAP}
 
-% fragile because contains verbatim
-\begin{frame}[fragile]
+\begin{frame}
   \frametitle{LDAP Test}
   \begin{itemize}
-    \item Follows structure of SSO test
+    \item Image must provide LDAP authentication
+    \item Follows structure of SSO test (setup, execute, teardown)
     \item Containerized LDAP server with test data
   \end{itemize}
+\end{frame}
+
+
+% fragile because contains verbatim
+\begin{frame}[fragile]
+  \frametitle{LDAP Test - Snippet}
   \begin{minted}[
-      frame=topline,
-      fontsize=\fontsize{7pt}{7pt},
+      fontsize=\scriptsize,
       breaklines,
     ]{bash}
 do_curl_test_with_basic_auth \
@@ -337,10 +346,14 @@ do_curl_test_with_basic_auth \
 \begin{frame}[fragile]
   \frametitle{Scaling Pipeline to Multiple Versions of Image}
   \begin{itemize}
-    \item GitLab CI missing "build matrix" feature. Solutions:
+    \item GitLab CI missing "build matrix" feature
+    \item Extends/Include
     \begin{itemize}
-      \item Extends/Include - Newer, not supported by GitLab Runner Exec
-      \item Anchors/References - What we use
+      \item Newer, not supported by GitLab Runner Exec
+    \end{itemize}
+    \item Anchors/References
+    \begin{itemize}
+      \item What we use
     \end{itemize}
   \end{itemize}
 \end{frame}
@@ -362,6 +375,7 @@ my_job:
     - docker info
   \end{minted}
 \end{frame}
+
 
 % fragile cause contains verbatim
 \begin{frame}[plain,fragile]
@@ -397,9 +411,8 @@ job_build_9_0_jdk8:
     \begin{itemize}
       \item Recent Google tool similar to Goss
       \item Basic tests runnable \textbf{without} Docker daemon (!)
-      \item Not as featurerich, but will likely receive more support
     \end{itemize}
-    \item "Clair"
+    \item Docker image vulnerability scanning - "Clair"
   \end{itemize}
 \end{frame}
 
@@ -411,12 +424,72 @@ job_build_9_0_jdk8:
 
 \begin{frame}
   \frametitle{References}
+  { 
+    \scriptsize
+    \begin{itemize}
+      \item Repository for this presentation: \url{https://gitlab.cern.ch/tloekkeb/voxxeddays-cern-docker-image-testing-in-gitlab-ci}
+      \item Goss: \url{https://github.com/aelsabbahy/goss}
+      \item GitLab CI vulnerability scanning docs: \url{https://docs.gitlab.com/ee/user/application_security/container_scanning/}
+      \item GitLab CI Docker-in-Docker docs: \url{https://docs.gitlab.com/ee/ci/docker/using_docker_build.html}
+      \item ContainerStructureTests: \url{https://github.com/GoogleContainerTools/container-structure-test}
+      \item GitLab Runner Exec: \url{https://docs.gitlab.com/runner/commands/\#gitlab-runner-exec}
+      \item Keycloak: \url{https://github.com/keycloak/keycloak}
+      \item Travis CI build matrix: \url{https://docs.travis-ci.com/user/build-matrix/}
+    \end{itemize}
+  }
+\end{frame}
+
+\begin{frame}
+  \frametitle{Features Used - Docker-in-Docker - Tricks}
   \begin{itemize}
-  \item Reference 1
-  \item Reference 2
-  \item Reference 3
-  \item Reference 4
+    \item docker:dind as a service - \mintinline{yaml}{alias: localhost} to make \mintinline{bash}{docker run -p 8080:8080 nginx && curl localhost:8080} from the job container work as expected
+    \item \mintinline{bash}{docker build --cache-from} to manually specify image to cache layers from
   \end{itemize}
+\end{frame}
+
+% fragile cause contains verbatim
+\begin{frame}[fragile]
+  \frametitle{YAML Anchors/References - Pitfall}
+  \begin{minted}[
+      fontsize=\small,
+      breaklines,
+    ]{yaml}
+.hidden: &anchor
+  image: docker:18.09
+  variables:
+    COMMON_VAR: ""
+
+my_job:
+  <<: *anchor
+  script:
+    - docker info
+  # Will not work!
+  variables:
+    MY_JOB_VAR: ""
+  \end{minted}
+\end{frame}
+
+% fragile cause contains verbatim
+\begin{frame}[fragile]
+  \frametitle{YAML Anchors/References - Pitfall - Solution}
+  \begin{minted}[
+      fontsize=\small,
+      breaklines,
+    ]{yaml}
+.hidden_job: &anchor_job
+  image: docker:18.09
+
+.hidden_var: &anchor_var
+  COMMON_VAR: ""
+
+my_job:
+  <<: *anchor_job
+  script:
+    - docker info
+  variables:
+    MY_JOB_VAR: ""
+    <<: *anchor_var
+  \end{minted}
 \end{frame}
 
 % fragile cause contains verbatim
