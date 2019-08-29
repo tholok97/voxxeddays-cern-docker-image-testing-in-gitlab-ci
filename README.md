@@ -30,3 +30,7 @@ Once this is done run `make lint`.
 
 * Based on this template: <https://github.com/icot/cern-beamer/tree/e50916c89196f22452037fd9526d6b7a7a2ab440>
 * Using this image to compile the LaTeX: <https://github.com/blang/latex-docker/tree/42d2c532a09a00938331512fd2b539f9944c400c>
+
+## Author
+
+Thomas Løkkeborg
