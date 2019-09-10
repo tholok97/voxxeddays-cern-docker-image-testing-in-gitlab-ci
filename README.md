@@ -1,6 +1,10 @@
 # Source of my presentation "Docker image testing in GitLab CI" for [VoxxedDays CERN](https://voxxeddays.com/cern/) 1st May 2019
 
-[Link to presentation at 1st May 2019.](https://gitlab.cern.ch/tloekkeb/voxxeddays-cern-docker-image-testing-in-gitlab-ci/-/jobs/4071790/artifacts/file/tloekkeb_voxxeddays_cern_2019_05_01_docker_image_testing_in_gitlab_ci.pdf)
+[![Recording of presentation on YouTube](http://img.youtube.com/vi/I7uHAuU-p8M/0.jpg)](http://www.youtube.com/watch?v=I7uHAuU-p8M "Docker image testing in GitLab CI - Thomas Holene Loekkeborg")
+
+* [Slides at 1st May 2019](https://gitlab.cern.ch/tloekkeb/voxxeddays-cern-docker-image-testing-in-gitlab-ci/-/jobs/4071790/artifacts/file/tloekkeb_voxxeddays_cern_2019_05_01_docker_image_testing_in_gitlab_ci.pdf)
+* [Indico event](https://indico.cern.ch/event/750582/contributions/3404819/)
+* [Voxxed Days CERN event](https://vxdcern19.confinabox.com/talk/ECC-8165/Docker_image_testing_in_GitLab_CI)
 
 The presentation is built on each push by GitLab CI and published as an artifact. The artifact is accessible by browsing the pipeline for a particular pushed commit.
 
