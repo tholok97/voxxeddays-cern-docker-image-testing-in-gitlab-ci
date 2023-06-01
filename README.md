@@ -1,3 +1,7 @@
+(Originally hosted at <https://gitlab.cern.ch/tloekkeb/voxxeddays-cern-docker-image-testing-in-gitlab-ci>. Copy to GitHub made on 01.06.2023)
+
+---
+
 # Source of my presentation "Docker image testing in GitLab CI" for [VoxxedDays CERN](https://voxxeddays.com/cern/) 1st May 2019
 
 [![Recording of presentation on YouTube](http://img.youtube.com/vi/I7uHAuU-p8M/0.jpg)](http://www.youtube.com/watch?v=I7uHAuU-p8M "Docker image testing in GitLab CI - Thomas Holene Loekkeborg")
